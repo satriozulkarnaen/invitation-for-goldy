@@ -283,9 +283,11 @@ svg.pic{display:block;width:100%;height:auto}
    'Note': p.note || '-',
    'Sent at': new Date().toLocaleString('en-GB', {timeZone:'Asia/Jakarta'}) + ' WIB'
   };
-  const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
-  return fetch(MAIL_URL, {method:'POST', headers:{'Content-Type':'application/json', 'Accept':'application/json'},
-   body: JSON.stringify(body), signal: ctrl.signal}).catch(() => {}).finally(() => clearTimeout(t));
+  /* FormSubmit can be slow, so the request keeps going in the background
+     while the page moves on after a short wait */
+  const req = fetch(MAIL_URL, {method:'POST', keepalive:true, headers:{'Accept':'application/json'},
+   body: new URLSearchParams(body)}).catch(() => {});
+  return Promise.race([req, new Promise(r => setTimeout(r, 2500))]);
  };
  const wa = text => 'https://wa.me/' + WA + '?text=' + encodeURIComponent(text);
  const remember = v => { try { localStorage.setItem('round-two', JSON.stringify(v)); } catch(e) {} };
